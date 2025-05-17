@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = "mongodb+srv://QuocBao:Bao%40123@cluster0.nckhvat.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0"
+}
+
+model User {
+  id            String    @id @default(cuid()) @map("_id")
+  name          String
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastActive    DateTime  @default(now())
+  role          UserRole  @default(USER)
+  
+  // Relations
+  ownedProjects Project[] @relation("ProjectOwner")
+  projects      ProjectMember[]
+  tasks         Task[]    @relation("TaskAssignee")
+  comments      Comment[]
+  sentInvitations ProjectInvitation[] @relation("InvitationSender")
+  receivedInvitations ProjectInvitation[] @relation("InvitationReceiver")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Project {
+  id          String    @id @default(cuid()) @map("_id")
+  name        String
+  description String
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime?
+  
+  // Relations
+  owner       User      @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  members     ProjectMember[]
+  tasks       Task[]
+  invitations ProjectInvitation[]
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+
+model ProjectMember {
+  id        String    @id @default(cuid()) @map("_id")
+  role      MemberRole @default(MEMBER)
+  joinedAt  DateTime  @default(now())
+  
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  @@unique([userId, projectId])
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model ProjectInvitation {
+  id        String    @id @default(cuid()) @map("_id")
+  role      MemberRole @default(MEMBER)
+  status    InvitationStatus @default(PENDING)
+  sentAt    DateTime  @default(now())
+  expiresAt DateTime
+  
+  // Relations
+  sender    User      @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  String
+  receiver  User?     @relation("InvitationReceiver", fields: [receiverEmail], references: [email])
+  receiverEmail String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  @@unique([receiverEmail, projectId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Task {
+  id          String    @id @default(cuid()) @map("_id")
+  title       String
+  description String
+  status      TaskStatus @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  comments    Comment[]
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Comment {
+  id        String    @id @default(cuid()) @map("_id")
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+}
