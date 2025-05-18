@@ -22,12 +22,12 @@ export function DashboardNav() {
           Dự án
         </Button>
       </Link>
-      <Link href="/dashboard/join-projects">
+      {/* <Link href="/dashboard/join-projects">
         <Button variant={pathname.includes("/join-projects") ? "secondary" : "ghost"} className="w-full justify-start">
           <Users className="mr-2 h-4 w-4" />
           Tham gia dự án
         </Button>
-      </Link>
+      </Link> */}
       <Link href="/dashboard/team">
         <Button variant={pathname.includes("/team") ? "secondary" : "ghost"} className="w-full justify-start">
           <Users className="mr-2 h-4 w-4" />

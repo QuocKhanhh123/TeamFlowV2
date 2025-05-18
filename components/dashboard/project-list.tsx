@@ -12,8 +12,10 @@ interface Project {
   id: string
   name: string
   description: string
-  status: "active" | "completed" | "on-hold"
+  status: "ACTIVE" | "COMPLETED" | "ON_HOLD"
   taskCount: number
+  memberCount: number
+  createdAt: string
 }
 
 export function ProjectList() {
@@ -76,12 +78,12 @@ export function ProjectList() {
               <CardTitle>{project.name}</CardTitle>
               <Badge
                 variant={
-                  project.status === "active" ? "default" : project.status === "completed" ? "success" : "secondary"
+                  project.status === "ACTIVE" ? "default" : project.status === "COMPLETED" ? "default" : "secondary"
                 }
               >
-                {project.status === "active"
+                {project.status === "ACTIVE"
                   ? "Đang hoạt động"
-                  : project.status === "completed"
+                  : project.status === "COMPLETED"
                     ? "Hoàn thành"
                     : "Tạm dừng"}
               </Badge>

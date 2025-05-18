@@ -25,7 +25,8 @@ export function ThemeToggle() {
       description: `Giao diện đã được cập nhật sang chế độ ${newTheme === "light" ? "sáng" : "tối"}.`,
     })
   };
-
+  if (!isMounted) return null
+  
   return (
     <div className="flex items-center space-x-2">
       <Switch id="theme-mode" checked={theme === "dark"} onCheckedChange={toggleTheme} />

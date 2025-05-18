@@ -10,7 +10,7 @@ export default function TeamPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Quản lý thành viên" text="Xem và quản lý thành viên trong nhóm của bạn.">
-        <InviteTeamMemberButton />
+        {/* <InviteTeamMemberButton /> */}
       </DashboardHeader>
 
       <TeamOverview />
@@ -18,7 +18,7 @@ export default function TeamPage() {
       <Tabs defaultValue="members" className="mt-6">
         <TabsList>
           <TabsTrigger value="members">Thành viên</TabsTrigger>
-          <TabsTrigger value="pending">Lời mời đang chờ</TabsTrigger>
+          {/* <TabsTrigger value="pending">Lời mời đang chờ</TabsTrigger> */}
         </TabsList>
         <TabsContent value="members" className="mt-4">
           <TeamMembers />
