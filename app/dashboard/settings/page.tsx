@@ -102,7 +102,7 @@ export default function SettingsPage() {
               </Label>
               <Switch
                 id="compact-view"
-                onCheckedChange={(checked: boolean) => {
+                onCheckedChange={(checked) => {
                   toast.success("Đã lưu cài đặt", {
                     description: `Chế độ xem gọn đã được ${checked ? "bật" : "tắt"}.`,
                   })
@@ -120,7 +120,7 @@ export default function SettingsPage() {
               <Switch
                 id="animations"
                 defaultChecked
-                onCheckedChange={(checked: boolean) => {
+                onCheckedChange={(checked) => {
                   toast.success("Đã lưu cài đặt", {
                     description: `Hiệu ứng chuyển động đã được ${checked ? "bật" : "tắt"}.`,
                   })

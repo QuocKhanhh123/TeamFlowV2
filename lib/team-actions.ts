@@ -321,12 +321,8 @@ export async function inviteTeamMember(data: { email: string; role: "admin" | "m
           role: data.role === "admin" ? MemberRole.ADMIN : MemberRole.MEMBER,
           status: InvitationStatus.PENDING,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
-          sender: {
-            connect: { id: user.id as string },
-          },
-          project: {
-            connect: { id: project.id },
-          },
+          senderId: user.id as string,
+          projectId: project.id,
         },
       })
 

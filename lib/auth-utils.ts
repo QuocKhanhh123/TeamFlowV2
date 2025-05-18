@@ -44,8 +44,9 @@ export async function verifyToken(token: string) {
 }
 
 // Lưu token vào cookie
-export function setAuthCookie(token: string) {
-  cookies().set({
+export async function setAuthCookie(token: string) {
+  const cookiesInstance = await cookies()
+  cookiesInstance.set({
     name: "auth_token",
     value: token,
     httpOnly: true,
@@ -56,13 +57,15 @@ export function setAuthCookie(token: string) {
 }
 
 // Xóa token khỏi cookie
-export function removeAuthCookie() {
-  cookies().delete("auth_token")
+export async function removeAuthCookie() {
+  const cookiesInstance = await cookies()
+  cookiesInstance.delete("auth_token")
 }
 
 // Lấy token từ cookie
 export async function getAuthToken(): Promise<string | undefined> {
-  return (await cookies()).get("auth_token")?.value
+  const cookiesInstance = await cookies()
+  return cookiesInstance.get("auth_token")?.value
 }
 
 // Lấy thông tin người dùng hiện tại từ token
