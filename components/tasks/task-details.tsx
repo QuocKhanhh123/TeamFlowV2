@@ -33,12 +33,13 @@ interface Task {
   id: string
   title: string
   description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "low" | "medium" | "high"
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  priority: "LOW" | "MEDIUM" | "HIGH"
   assignee: {
+    id: string
     name: string
-    avatar?: string
-  }
+    email: string
+  } | null
   createdAt: string
   comments: {
     id: string
@@ -165,15 +166,15 @@ export function TaskDetails({ projectId, taskId }: TaskDetailsProps) {
             </AlertDialog>
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
-            <Badge variant={task.status === "todo" ? "outline" : task.status === "in-progress" ? "default" : "success"}>
-              {task.status === "todo" ? "Cần làm" : task.status === "in-progress" ? "Đang thực hiện" : "Hoàn thành"}
+            <Badge variant={task.status === "TODO" ? "outline" : task.status === "IN_PROGRESS" ? "default" : "secondary"}>
+              {task.status === "TODO" ? "Cần làm" : task.status === "IN_PROGRESS" ? "Đang thực hiện" : "Hoàn thành"}
             </Badge>
             <Badge
-              variant={task.priority === "high" ? "destructive" : task.priority === "medium" ? "default" : "secondary"}
+              variant={task.priority === "HIGH" ? "destructive" : task.priority === "MEDIUM" ? "default" : "secondary"}
             >
-              {task.priority === "high"
+              {task.priority === "HIGH"
                 ? "Ưu tiên cao"
-                : task.priority === "medium"
+                : task.priority === "MEDIUM"
                   ? "Ưu tiên trung bình"
                   : "Ưu tiên thấp"}
             </Badge>
@@ -189,7 +190,7 @@ export function TaskDetails({ projectId, taskId }: TaskDetailsProps) {
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
                 <AvatarImage
-                  src={task.assignee?.avatar || "/placeholder.svg?height=24&width=24"}
+                  src="/placeholder.svg?height=24&width=24"
                   alt={task.assignee?.name}
                 />
                 <AvatarFallback className="text-[10px]">

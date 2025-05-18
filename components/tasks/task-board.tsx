@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,8 +13,8 @@ interface Task {
   id: string
   title: string
   description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "low" | "medium" | "high"
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  priority: "LOW" | "MEDIUM" | "HIGH"
   assignee: {
     name: string
     avatar?: string
@@ -32,7 +32,7 @@ interface TaskBoardProps {
 }
 
 export function TaskBoard({ projectId }: TaskBoardProps) {
-  const [columns, setColumns] = useState<any[]>([
+  const [columns, setColumns] = useState<Column[]>([
     { id: "TODO", title: "Cần làm", tasks: [] },
     { id: "IN_PROGRESS", title: "Đang thực hiện", tasks: [] },
     { id: "DONE", title: "Hoàn thành", tasks: [] },
@@ -51,7 +51,7 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
           tasks: tasks.filter((task) => task.status === column.id),
         }))
 
-        setColumns(newColumns)
+        setColumns(newColumns as Column[])
       } catch (error) {
         console.error("Failed to fetch tasks:", error)
       } finally {
@@ -91,7 +91,7 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
         const newTasks = [...column.tasks]
         newTasks.splice(destination.index, 0, {
           ...task,
-          status: destination.droppableId as "todo" | "in-progress" | "done",
+          status: destination.droppableId as "TODO" | "IN_PROGRESS" | "DONE",
         })
         return {
           ...column,
@@ -169,19 +169,19 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
                                   <h3 className="font-medium text-sm">{task.title}</h3>
                                   <Badge
                                     variant={
-                                      task.priority === "high"
+                                      task.priority === "HIGH"
                                         ? "destructive"
-                                        : task.priority === "medium"
+                                        : task.priority === "MEDIUM"
                                           ? "default"
                                           : "secondary"
                                     }
                                     className="text-[10px]"
                                   >
-                                    {task.priority === "high"
+                                    {task.priority === "HIGH"
                                       ? "Cao"
-                                      : task.priority === "medium"
+                                      : task.priority === "MEDIUM"
                                         ? "Trung bình"
-                                        : "Thấp"}
+                                        : "Thấp"} 
                                   </Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>

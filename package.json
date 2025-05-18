@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/core": "latest",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "latest",
     "@prisma/client": "latest",
     "@radix-ui/react-accordion": "1.2.2",
