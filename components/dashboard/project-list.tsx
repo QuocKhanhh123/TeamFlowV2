@@ -95,7 +95,7 @@ export function ProjectList() {
             <Button variant="ghost" size="sm">
               Chỉnh sửa
             </Button>
-            <Link href={`/projects/${project.id}`}>
+            <Link href={`/dashboard/projects/${project.id}`}>
               <Button size="sm">Xem chi tiết</Button>
             </Link>
           </CardFooter>

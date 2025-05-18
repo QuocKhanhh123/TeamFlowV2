@@ -166,7 +166,7 @@ export async function createTask(
       },
     })
 
-    revalidatePath(`/projects/${projectId}`)
+    revalidatePath(`/dashboard/projects/${projectId}`)
     return task.id
   } catch (error) {
     console.error("Create task error:", error)
@@ -197,7 +197,7 @@ export async function updateTaskStatus(projectId: string, taskId: string, status
       },
     })
 
-    revalidatePath(`/projects/${projectId}`)
+    revalidatePath(`/dashboard/projects/${projectId}`)
     return task
   } catch (error) {
     console.error("Update task status error:", error)

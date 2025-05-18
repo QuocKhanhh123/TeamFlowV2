@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 import { logoutUser } from "@/lib/auth-actions"
 
 export function UserNav() {
+  
   const router = useRouter()
 
   const handleLogout = async () => {

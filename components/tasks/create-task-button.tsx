@@ -55,11 +55,12 @@ export function CreateTaskButton({ projectId }: CreateTaskButtonProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     try {
-      // In a real app, this would create a task in the backend
       await createTask(projectId, values)
       setOpen(false)
       form.reset()
       router.refresh()
+      // Force a window focus event to trigger TaskBoard refresh
+      window.dispatchEvent(new Event('focus'))
     } catch (error) {
       console.error(error)
     } finally {
@@ -70,10 +71,12 @@ export function CreateTaskButton({ projectId }: CreateTaskButtonProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Tạo công việc
-        </Button>
+        <div className="flex justify-end">
+          <Button className="">
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo công việc
+          </Button>
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

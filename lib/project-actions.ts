@@ -177,6 +177,150 @@ export async function updateProject(id: string, data: { name?: string; descripti
   }
 }
 
+
+// Lấy danh sách thành viên trong dự án
+export async function getProjectMembers(projectId: string) {
+  const user = await requireAuth()
+
+  try {
+    // Kiểm tra người dùng có quyền truy cập dự án không
+    const hasAccess = await checkProjectAccess(projectId, user.id as string)
+
+    if (!hasAccess) {
+      throw new Error("Bạn không có quyền truy cập dự án này")
+    }
+
+    const projectMembers = await prisma.projectMember.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [
+        { role: "asc" }, // OWNER trước, sau đó là ADMIN, rồi đến MEMBER
+        { joinedAt: "desc" }, // Mới nhất lên đầu
+      ],
+    })
+
+    return projectMembers.map((member) => ({
+      id: member.user.id,
+      name: member.user.name,
+      email: member.user.email,
+      role: member.role,
+      joinedAt: member.joinedAt.toISOString(),
+    }))
+  } catch (error) {
+    console.error("Get project members error:", error)
+    throw new Error("Không thể lấy danh sách thành viên dự án. Vui lòng thử lại.")
+  }
+}
+
+// Lấy danh sách người dùng có thể thêm vào dự án
+export async function getAvailableUsers(projectId: string) {
+  const user = await requireAuth()
+
+  try {
+    // Kiểm tra người dùng có quyền chỉnh sửa dự án không
+    const canEdit = await checkProjectEditPermission(projectId, user.id as string)
+
+    if (!canEdit) {
+      throw new Error("Bạn không có quyền thêm thành viên vào dự án này")
+    }
+
+    // Lấy danh sách người dùng chưa tham gia dự án
+    const existingMemberIds = await prisma.projectMember.findMany({
+      where: { projectId },
+      select: { userId: true },
+    })
+
+    const existingIds = existingMemberIds.map((member) => member.userId)
+
+    const availableUsers = await prisma.user.findMany({
+      where: {
+        id: { notIn: existingIds },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: { name: "asc" },
+    })
+
+    return availableUsers
+  } catch (error) {
+    console.error("Get available users error:", error)
+    throw new Error("Không thể lấy danh sách người dùng. Vui lòng thử lại.")
+  }
+}
+
+// Thêm thành viên vào dự án
+export async function addProjectMember(projectId: string, userId: string, role: "ADMIN" | "MEMBER") {
+  const user = await requireAuth()
+
+  try {
+    // Kiểm tra người dùng có quyền chỉnh sửa dự án không
+    const canEdit = await checkProjectEditPermission(projectId, user.id as string)
+
+    if (!canEdit) {
+      throw new Error("Bạn không có quyền thêm thành viên vào dự án này")
+    }
+
+    // Kiểm tra người dùng đã là thành viên chưa
+    const existingMember = await prisma.projectMember.findUnique({
+      where: {
+        userId_projectId: {
+          userId,
+          projectId,
+        },
+      },
+    })
+
+    if (existingMember) {
+      throw new Error("Người dùng đã là thành viên của dự án này")
+    }
+
+    // Thêm người dùng vào dự án
+    const projectMember = await prisma.projectMember.create({
+      data: {
+        user: {
+          connect: { id: userId },
+        },
+        project: {
+          connect: { id: projectId },
+        },
+        role: role === "ADMIN" ? MemberRole.ADMIN : MemberRole.MEMBER,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    revalidatePath(`/projects/${projectId}/members`)
+    return {
+      id: projectMember.user.id,
+      name: projectMember.user.name,
+      email: projectMember.user.email,
+      role: projectMember.role,
+      joinedAt: projectMember.joinedAt.toISOString(),
+    }
+  } catch (error) {
+    console.error("Add project member error:", error)
+    throw new Error("Không thể thêm thành viên vào dự án. Vui lòng thử lại.")
+  }
+}
+
 // Xóa dự án
 export async function deleteProject(id: string) {
   const user = await requireAuth()
@@ -480,4 +624,86 @@ async function checkProjectEditPermission(projectId: string, userId: string) {
   })
 
   return !!project
+}
+
+
+// Cập nhật vai trò của thành viên trong dự án
+export async function updateProjectMemberRole(projectId: string, memberId: string, newRole: "ADMIN" | "MEMBER") {
+  const user = await requireAuth()
+
+  try {
+    // Kiểm tra người dùng có quyền chỉnh sửa dự án không
+    const canEdit = await checkProjectEditPermission(projectId, user.id as string)
+
+    if (!canEdit) {
+      throw new Error("Bạn không có quyền cập nhật vai trò thành viên trong dự án này")
+    }
+
+    // Cập nhật vai trò thành viên
+    await prisma.projectMember.update({
+      where: {
+        userId_projectId: {
+          userId: memberId,
+          projectId,
+        },
+      },
+      data: {
+        role: newRole as MemberRole,
+      },
+    })
+
+    revalidatePath(`/projects/${projectId}/members`)
+    return true
+  } catch (error) {
+    console.error("Update project member role error:", error)
+    throw new Error("Không thể cập nhật vai trò thành viên. Vui lòng thử lại.")
+  }
+}
+
+// Xóa thành viên khỏi dự án
+export async function removeProjectMember(projectId: string, memberId: string) {
+  const user = await requireAuth()
+
+  try {
+    // Kiểm tra người dùng có quyền chỉnh sửa dự án không
+    const canEdit = await checkProjectEditPermission(projectId, user.id as string)
+
+    if (!canEdit) {
+      throw new Error("Bạn không có quyền xóa thành viên khỏi dự án này")
+    }
+
+    // Kiểm tra không cho phép xóa chủ sở hữu
+    const memberToRemove = await prisma.projectMember.findUnique({
+      where: {
+        userId_projectId: {
+          userId: memberId,
+          projectId,
+        },
+      },
+    })
+
+    if (!memberToRemove) {
+      throw new Error("Thành viên không tồn tại trong dự án")
+    }
+
+    if (memberToRemove.role === MemberRole.OWNER) {
+      throw new Error("Không thể xóa chủ sở hữu dự án")
+    }
+
+    // Xóa thành viên khỏi dự án
+    await prisma.projectMember.delete({
+      where: {
+        userId_projectId: {
+          userId: memberId,
+          projectId,
+        },
+      },
+    })
+
+    revalidatePath(`/projects/${projectId}/members`)
+    return true
+  } catch (error) {
+    console.error("Remove project member error:", error)
+    throw new Error("Không thể xóa thành viên khỏi dự án. Vui lòng thử lại.")
+  }
 }

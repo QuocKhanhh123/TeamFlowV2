@@ -79,7 +79,7 @@ export function TaskDetails({ projectId, taskId }: TaskDetailsProps) {
     try {
       // In a real app, this would delete the task in the backend
       await deleteTask(projectId, taskId)
-      router.push(`/projects/${projectId}`)
+      router.push(`/dashboard/projects/${projectId}`)
       router.refresh()
     } catch (error) {
       console.error("Failed to delete task:", error)

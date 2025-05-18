@@ -14,7 +14,7 @@ interface Project {
   id: string
   name: string
   description: string
-  status: "active" | "completed" | "on-hold"
+  status: "ACTIVE" | "COMPLETED" | "ON_HOLD"
   memberCount: number
   owner: {
     name: string
@@ -32,7 +32,7 @@ export function JoinableProjectList() {
       try {
         // In a real app, this would fetch from a backend
         const data = await getJoinableProjects()
-        setProjects(data)
+        setProjects(data as Project[])
       } catch (error) {
         console.error("Failed to fetch joinable projects:", error)
       } finally {
@@ -104,12 +104,12 @@ export function JoinableProjectList() {
               <CardTitle>{project.name}</CardTitle>
               <Badge
                 variant={
-                  project.status === "active" ? "default" : project.status === "completed" ? "success" : "secondary"
+                  project.status === "ACTIVE" ? "default" : project.status === "COMPLETED" ? "default" : "secondary"
                 }
               >
-                {project.status === "active"
+                {project.status === "ACTIVE"
                   ? "Đang hoạt động"
-                  : project.status === "completed"
+                  : project.status === "COMPLETED"
                     ? "Hoàn thành"
                     : "Tạm dừng"}
               </Badge>

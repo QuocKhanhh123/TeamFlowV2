@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getTasks, updateTaskStatus } from "@/lib/task-actions"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface Task {
   id: string
@@ -38,11 +39,13 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
     { id: "DONE", title: "Hoàn thành", tasks: [] },
   ])
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        // In a real app, this would fetch from a backend
         const tasks = await getTasks(projectId)
 
         // Group tasks by status
@@ -60,13 +63,31 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
     }
 
     fetchTasks()
-  }, [projectId])
+  }, [projectId, refreshKey])
+
+  // Force refresh when router.refresh() is called
+  useEffect(() => {
+    const handleRefresh = () => {
+      setRefreshKey(prev => prev + 1)
+    }
+
+    window.addEventListener('focus', handleRefresh)
+    return () => {
+      window.removeEventListener('focus', handleRefresh)
+    }
+  }, [])
 
   const onDragEnd = async (result: any) => {
+    setDraggedOverColumn(null)
     const { destination, source, draggableId } = result
 
-    // If there's no destination or the item was dropped back to its original position
-    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+    // If there's no destination
+    if (!destination) {
+      return
+    }
+
+    // If the item was dropped back to its original position
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
       return
     }
 
@@ -78,15 +99,22 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
 
     // Create a new array of columns
     const newColumns = columns.map((column) => {
-      // Remove from source column
+      // If this is the source column
       if (column.id === source.droppableId) {
+        const newTasks = [...column.tasks]
+        // Remove the task from its original position
+        newTasks.splice(source.index, 1)
+        // If this is also the destination column, insert at the new position
+        if (column.id === destination.droppableId) {
+          newTasks.splice(destination.index, 0, task)
+        }
         return {
           ...column,
-          tasks: column.tasks.filter((t) => t.id !== draggableId),
+          tasks: newTasks,
         }
       }
 
-      // Add to destination column
+      // If this is the destination column (and not the source column)
       if (column.id === destination.droppableId) {
         const newTasks = [...column.tasks]
         newTasks.splice(destination.index, 0, {
@@ -102,6 +130,7 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
       return column
     })
 
+    // Update UI optimistically
     setColumns(newColumns)
 
     // Update task status in the backend
@@ -112,6 +141,11 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
       // Revert the UI change if the API call fails
       setColumns(columns)
     }
+  }
+
+  const onDragUpdate = (update: any) => {
+    const { destination } = update
+    setDraggedOverColumn(destination?.droppableId || null)
   }
 
   if (loading) {
@@ -136,19 +170,34 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columns.map((column) => (
-          <Card key={column.id}>
+          <Card 
+            key={column.id} 
+            className={`transition-colors duration-200 ${
+              draggedOverColumn === column.id 
+                ? 'bg-muted/50 border-primary/50' 
+                : ''
+            }`}
+          >
             <CardHeader className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-md font-medium">{column.title}</CardTitle>
                 <Badge variant="outline">{column.tasks.length}</Badge>
               </div>
             </CardHeader>
-            <Droppable droppableId={column.id} isDropDisabled={loading} isCombineEnabled ={false} ignoreContainerClipping ={false}> 
+            <Droppable droppableId={column.id} isDropDisabled={loading} isCombineEnabled={false} ignoreContainerClipping={false}>
               {(provided) => (
-                <CardContent className="px-4 py-0" {...provided.droppableProps} ref={provided.innerRef}>
+                <CardContent 
+                  className={`px-4 py-0 min-h-[200px] transition-colors duration-200 ${
+                    draggedOverColumn === column.id 
+                      ? 'bg-muted/30' 
+                      : ''
+                  }`}
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef}
+                >
                   {column.tasks.length === 0 ? (
                     <div className="flex items-center justify-center h-24 border border-dashed rounded-md my-2">
                       <p className="text-sm text-muted-foreground">Không có công việc nào</p>
@@ -157,7 +206,7 @@ export function TaskBoard({ projectId }: TaskBoardProps) {
                     column.tasks.map((task, index) => (
                       <Draggable key={task.id} draggableId={task.id} index={index}>
                         {(provided) => (
-                          <Link href={`/projects/${projectId}/tasks/${task.id}`}>
+                          <Link href={`/dashboard/projects/${projectId}/tasks/${task.id}`}>
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
