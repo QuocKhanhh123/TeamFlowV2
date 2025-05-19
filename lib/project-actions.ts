@@ -344,6 +344,18 @@ export async function deleteProject(id: string) {
       where: { id },
     })
 
+    await prisma.projectMember.deleteMany({
+      where: { projectId: id },
+    })
+
+    await prisma.task.deleteMany({
+      where: { projectId: id },
+    })
+
+    await prisma.projectInvitation.deleteMany({
+      where: { projectId: id },
+    })
+
     revalidatePath("/dashboard")
     return true
   } catch (error) {

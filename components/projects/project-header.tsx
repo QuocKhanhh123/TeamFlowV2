@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { getProject } from "@/lib/project-actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EditProjectButton } from "@/components/projects/edit-project-button"
+import { DeleteProjectButton } from "@/components/projects/delete-project-button"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -68,7 +69,12 @@ export function ProjectHeader({ id, heading, text, children }: ProjectHeaderProp
           <h1 className="font-heading text-3xl md:text-4xl">{project?.name || heading}</h1>
           <p className="text-lg text-muted-foreground">{project?.description || text}</p>
         </div>
-        {project && <EditProjectButton projectId={id} initialData={project} />}
+        {project && (
+          <div className="flex gap-2">
+            <EditProjectButton projectId={id} initialData={project} />
+            <DeleteProjectButton projectId={id} />
+          </div>
+        )}
       </div>
 
       <div className="border-b">
