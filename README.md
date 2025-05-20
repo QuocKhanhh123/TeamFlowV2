@@ -22,7 +22,7 @@
 
 ```bash
 # Cài đặt dependencies
-npm install
+npm install --force
 
 # Tạo Prisma client
 npx prisma generate
